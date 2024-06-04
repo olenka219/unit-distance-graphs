@@ -14,6 +14,7 @@ class Graph:
     def __init__(self, points):
         self.points = points
         self.edges = self.create_edges()
+        self.color_map = self.greedy_coloring()
 
     def create_edges(self):
         edges = []
@@ -40,10 +41,33 @@ class Graph:
         ]
         return Graph(new_points)
 
-    def plot(self):
+    def plot(self, use_colors=False):
         plt.figure()
         for edge in self.edges:
             p1, p2 = self.points[edge[0]], self.points[edge[1]]
             plt.plot([p1.x, p2.x], [p1.y, p2.y], 'bo-')
+        if use_colors:
+            for i, p in enumerate(self.points):
+                plt.plot(p.x, p.y, 'o', color=plt.cm.Set1(self.color_map[i]))
+            color_count = max(self.color_map.values()) + 1
+            plt.title(f"Graph Coloring: {color_count} colors needed")
         plt.axis('equal')
         plt.show()
+
+    def greedy_coloring(self):
+        color_map = {}
+        for node in range(len(self.points)):
+            available_colors = [True] * len(self.points)
+            for edge in self.edges:
+                if edge[0] == node and edge[1] in color_map:
+                    color = color_map[edge[1]]
+                    available_colors[color] = False
+                elif edge[1] == node and edge[0] in color_map:
+                    color = color_map[edge[0]]
+                    available_colors[color] = False
+
+            for color, available in enumerate(available_colors):
+                if available:
+                    color_map[node] = color
+                    break
+        return color_map
