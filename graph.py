@@ -14,7 +14,8 @@ class Graph:
     def __init__(self, points):
         self.points = points
         self.edges = self.create_edges()
-        self.color_map = self.greedy_coloring()
+        self.adj_list = self.create_adj_list()
+        self.color_map = self.color_graph()
 
     def create_edges(self):
         edges = []
@@ -23,6 +24,13 @@ class Graph:
                 if i < j and abs(p1.distance_to(p2) - 1) < 1e-15:
                     edges.append((i, j))
         return edges
+
+    def create_adj_list(self):
+        adj_list = {i: [] for i in range(len(self.points))}
+        for u, v in self.edges:
+            adj_list[u].append(v)
+            adj_list[v].append(u)
+        return adj_list
 
     def union(self, other):
         new_points = self.points + other.points
@@ -48,26 +56,34 @@ class Graph:
             plt.plot([p1.x, p2.x], [p1.y, p2.y], 'bo-')
         if use_colors:
             for i, p in enumerate(self.points):
-                plt.plot(p.x, p.y, 'o', color=plt.cm.Set1(self.color_map[i]))
+                plt.plot(p.x, p.y, 'o', color=plt.cm.Set1(self.color_map[i] / 7.0))
             color_count = max(self.color_map.values()) + 1
             plt.title(f"Graph Coloring: {color_count} colors needed")
         plt.axis('equal')
         plt.show()
 
-    def greedy_coloring(self):
-        color_map = {}
-        for node in range(len(self.points)):
-            available_colors = [True] * len(self.points)
-            for edge in self.edges:
-                if edge[0] == node and edge[1] in color_map:
-                    color = color_map[edge[1]]
-                    available_colors[color] = False
-                elif edge[1] == node and edge[0] in color_map:
-                    color = color_map[edge[0]]
-                    available_colors[color] = False
+    def color_graph(self):
+        n = len(self.points)
+        color_map = [-1] * n
 
-            for color, available in enumerate(available_colors):
-                if available:
-                    color_map[node] = color
-                    break
-        return color_map
+        def is_valid(vertex, color):
+            return all(color_map[neighbor] != color for neighbor in self.adj_list[vertex])
+
+        def recursive_color(vertex, m):
+            if vertex == n:
+                return True
+
+            for color in range(m):
+                if is_valid(vertex, color):
+                    color_map[vertex] = color
+                    if recursive_color(vertex + 1, m):
+                        return True
+                    color_map[vertex] = -1
+
+            return False
+
+        for m in range(1, 8):
+            if recursive_color(0, m):
+                return {i: color_map[i] for i in range(n)}
+
+        return {i: color_map[i] for i in range(n)}
