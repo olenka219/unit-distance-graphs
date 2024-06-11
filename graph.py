@@ -50,16 +50,26 @@ class Graph:
         return Graph(new_points)
 
     def plot(self, use_colors=False):
+        
         plt.figure()
+
+        plt.axis('equal')
+        plt.axhline(y=0, color='lightgrey', linewidth=0.5)
+        plt.axvline(x=0, color='lightgrey', linewidth=0.5)
+        plt.xticks([0, 1], labels=['0', '1'])
+        plt.yticks([0, 1], labels=['0', '1'])
+        plt.grid(True, which='both', linestyle='--', linewidth=0.5, color='lightgrey')
+        
         for edge in self.edges:
             p1, p2 = self.points[edge[0]], self.points[edge[1]]
             plt.plot([p1.x, p2.x], [p1.y, p2.y], 'bo-')
+        
         if use_colors:
             for i, p in enumerate(self.points):
                 plt.plot(p.x, p.y, 'o', color=plt.cm.Set1(self.color_map[i] / 7.0))
             color_count = max(self.color_map.values()) + 1
-            plt.title(f"Graph Coloring: {color_count} colors needed")
-        plt.axis('equal')
+            plt.title(f"At least {color_count} colors needed")
+        
         plt.show()
 
     def color_graph(self):
